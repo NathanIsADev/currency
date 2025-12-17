@@ -1,69 +1,71 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Currency Test (Fake)</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Firebase Click Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
-    body { font-family: system-ui, sans-serif; display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column; }
-    button { padding: 12px 20px; font-size:16px; border-radius:8px; }
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #111;
+      color: #eee;
+    }
+
+    button {
+      padding: 14px 22px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <h1>Fake Purchase Demo</h1>
-  <p>Click to simulate paying <strong>€0.01</strong> for <strong>500 in-game</strong> dollars.</p>
-  <button id="buyBtn">Buy 500 in-game for €0.01 (fake)</button>
+
+  <h1>Firebase Button Test</h1>
+  <button id="buyBtn">Click me</button>
   <p id="status"></p>
 
-  <!-- Firebase v8 (simple Realtime DB usage) -->
+  <!-- Firebase v8 SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <script>
-    // ======= REPLACE THESE WITH YOUR FIREBASE CONFIG =======
+    // 🔴 REPLACE NOTHING ELSE EXCEPT apiKey IF YOU WANT
     const firebaseConfig = {
-      apiKey: "REPLACE_API_KEY",
-      authDomain: "REPLACE_AUTH_DOMAIN",
+      apiKey: "ANY_STRING_WORKS_FOR_TESTING",
+      authDomain: "currency-test-3dbbc.firebaseapp.com",
       databaseURL: "https://currency-test-3dbbc-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "REPLACE_PROJECT_ID",
+      projectId: "currency-test-3dbbc"
     };
-    // ======================================================
 
+    // Init Firebase
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.();
+    console.log("Firebase initialized");
 
-    // Simple test user id for the demo (you can change or generate).
-    const userId = 'tester';
+    const status = document.getElementById("status");
+    const btn = document.getElementById("buyBtn");
 
-    document.getElementById('buyBtn').addEventListener('click', () => {
-      const cents = 1;
-      const ingame = 500;
+    btn.addEventListener("click", () => {
+      console.log("BUTTON CLICKED");
 
-      // Create a purchase record (for audit)
-      const purchase = {
-        user: userId,
-        cents: cents,
-        ingame: ingame,
-        timestamp: Date.now(),
-        note: "SIMULATED payment, NO CHARGE"
-      };
-
-      // Push purchase then atomically increment the user's balance
-      const purchasesRef = db.ref('purchases');
-      purchasesRef.push(purchase)
-        .then(() => {
-          const balanceRef = db.ref('balances/' + userId + '/balance');
-          // Use transaction to avoid race conditions
-          return balanceRef.transaction(curr => (curr || 0) + ingame);
-        })
-        .then(() => {
-          document.getElementById('status').innerText = 'Simulated purchase recorded — database updated.';
-        })
-        .catch(err => {
-          console.error(err);
-          document.getElementById('status').innerText = 'Error: ' + err.message;
-        });
+      firebase.database().ref("click_test").set({
+        clickedAt: Date.now()
+      }).then(() => {
+        status.innerText = "✅ Wrote to Firebase!";
+        alert("Success! Check Firebase console.");
+      }).catch(err => {
+        console.error(err);
+        status.innerText = "❌ Error: " + err.message;
+        alert("Firebase error — check console");
+      });
     });
   </script>
+
 </body>
 </html>
