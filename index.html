@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Currency Test (Fake)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { font-family: system-ui, sans-serif; display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column; }
+    button { padding: 12px 20px; font-size:16px; border-radius:8px; }
+  </style>
+</head>
+<body>
+  <h1>Fake Purchase Demo</h1>
+  <p>Click to simulate paying <strong>€0.01</strong> for <strong>500 in-game</strong> dollars.</p>
+  <button id="buyBtn">Buy 500 in-game for €0.01 (fake)</button>
+  <p id="status"></p>
+
+  <!-- Firebase v8 (simple Realtime DB usage) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <script>
+    // ======= REPLACE THESE WITH YOUR FIREBASE CONFIG =======
+    const firebaseConfig = {
+      apiKey: "REPLACE_API_KEY",
+      authDomain: "REPLACE_AUTH_DOMAIN",
+      databaseURL: "https://REPLACE_PROJECT_ID.firebaseio.com",
+      projectId: "REPLACE_PROJECT_ID",
+    };
+    // ======================================================
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Simple test user id for the demo (you can change or generate).
+    const userId = 'tester';
+
+    document.getElementById('buyBtn').addEventListener('click', () => {
+      const cents = 1;
+      const ingame = 500;
+
+      // Create a purchase record (for audit)
+      const purchase = {
+        user: userId,
+        cents: cents,
+        ingame: ingame,
+        timestamp: Date.now(),
+        note: "SIMULATED payment, NO CHARGE"
+      };
+
+      // Push purchase then atomically increment the user's balance
+      const purchasesRef = db.ref('purchases');
+      purchasesRef.push(purchase)
+        .then(() => {
+          const balanceRef = db.ref('balances/' + userId + '/balance');
+          // Use transaction to avoid race conditions
+          return balanceRef.transaction(curr => (curr || 0) + ingame);
+        })
+        .then(() => {
+          document.getElementById('status').innerText = 'Simulated purchase recorded — database updated.';
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById('status').innerText = 'Error: ' + err.message;
+        });
+    });
+  </script>
+</body>
+</html>
